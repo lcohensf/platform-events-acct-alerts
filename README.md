@@ -24,7 +24,7 @@ Find the index.hbs file under views and modify the list of Accounts to match you
 ### Running the Application Locally
 
 ```
-git clone https://github.com/jthurst01/platform-events-acct-alerts.git
+git clone https://github.com/lcohensf/platform-events-acct-alerts.git
 cd platform-event-acct-alerts
 npm install
 ```

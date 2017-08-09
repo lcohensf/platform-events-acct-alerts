@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>{{ title }}</title>
+		<link rel="stylesheet" href="/assets/stylesheets/style.css" />
+		<link rel="stylesheet" href="/assets/styles/salesforce-lightning-design-system.css" />
+		<script src="/assets/scripts/jquery.min.js"></script>
+		<script src="/assets/scripts/dateFormat.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript">			
+			var socket = io();
+			socket.on('event-processed', function (data) {
+				var results = JSON.parse(data);
+				console.log(results);
+				
+				var returnRequestCreatedDate = new Date(results['payload']['Return_Request_Created_Date__c']);
+				var assetInstallDate = new Date(results['payload']['Asset_Install_Date__c']);
+				var lastUpdatedTime = new Date(results['payload']['Last_Updated_Time__c']);
+				var newPlatformEvent;
+
+				if ('ChangeEventHeader' in results['payload']) {
+					newPlatformEvent = '<div class="slds-tile slds-media slds-box">' +
+						'	<div class="slds-media__figure">' +
+						'		<svg aria-hidden="true" class="slds-icon slds-icon--standard slds-icon-custom-30">' +
+						'			<use xlink:href="/assets/icons/custom-sprite/svg/symbols.svg#custom30"></use>' +
+						'		</svg>' +
+						'	</div>' +
+						'	<div class="slds-media__body">' +
+						'		<p class="slds-text-heading--label">Replay ID: ' + results['event']['replayId'] + '</p>' +
+						'		<h3 class="slds-truncate slds-text-heading--small" title="Record Info">' + results['payload']['ChangeEventHeader']['entityName'] + ' ID: ' + results['payload']['ChangeEventHeader']['objectId'] + '</h3>' +
+					
+						'		<div class="slds-tile__detail slds-text-body--small">' +
+						'			<dl class="slds-dl--horizontal">'; 
+				} else {
+					newPlatformEvent = '<div class="slds-tile slds-media slds-box">' +
+						'	<div class="slds-media__figure">' +
+						'		<svg aria-hidden="true" class="slds-icon slds-icon--standard slds-icon-custom-99">' +
+						'			<use xlink:href="/assets/icons/custom-sprite/svg/symbols.svg#custom99"></use>' +
+						'		</svg>' +
+						'	</div>' +
+						'	<div class="slds-media__body">' +
+						'		<p class="slds-text-heading--label">Replay ID: ' + results['event']['replayId'] + '</p>' +
+						'		<div class="slds-tile__detail slds-text-body--small">' +
+						'			<dl class="slds-dl--horizontal">'; 
+				}
+					
+					for (var key in results) {
+						if (key == 'payload') {
+							for (var key in results['payload']) {
+								if (results['payload'].hasOwnProperty(key)) {
+									if (results['payload'][key] != null) {
+										newPlatformEvent +='<dt class="slds-dl--horizontal__label">' +
+											'					<p class="slds-truncate" title="Asset Type">' + key + '</p>' +
+											'				</dt>' +
+											'				<dd class="slds-dl--horizontal__detail slds-tile__meta">' +
+											'					<p class="slds-truncate" title="' + JSON.stringify(results['payload'][key]) + '">' + JSON.stringify(results['payload'][key]) + '</p>' +
+											'				</dd>';
+									}
+								}
+							}
+						}
+					}
+					
+					newPlatformEvent += '			</dl>' +
+					'		</div>' +
+					'	</div>' +
+					'</div>';
+				$(newPlatformEvent).prependTo('#messages').hide().slideDown();
+					  
+			})
+			
+			$(document).ready(function() {
+			
+				var defaultDate = new Date();
+				$("#issueDate").val(dateFormat(defaultDate, "yyyy-mm-dd"));
+				
+				$("#createBtn").click(function(event) {
+					event.preventDefault();
+					console.log('In click');
+					var eventObj = {};
+					eventObj["accountId"] = $('#accountId').val();
+					eventObj["serialNumber"] = $('#serialNumber').val();
+					eventObj["issueDescription"] = $('#issueDescription').val();
+					console.log('eventObj: ' + JSON.stringify(eventObj));
+					$.post('/', eventObj, function(resp) {
+						console.log("post response: " + resp);
+					});
+				});
+				
+				//$("#subscribeBtn").click(function(event) {
+					event.preventDefault();
+					$.post('/newSub', function(resp) {
+						console.log("post response: " + resp);
+					});
+				//});
+				
+				$("#subscribeCDCBtn").click(function(event) {
+					event.preventDefault();
+					$.post('/newCDCSub', function(resp) {
+						console.log("post response: " + resp);
+					});
+				});
+			});
+			
+		</script>
+	</head>
+	<body>
+    	{{{body}}}
+	</body>
+</html>
